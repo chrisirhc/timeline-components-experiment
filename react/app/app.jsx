@@ -17,6 +17,10 @@ var TimeArea = React.createClass({
     };
   },
 
+  handleTooltip: function (tooltipObj) {
+    this.setState({tooltip: tooltipObj});
+  },
+
   render: function() {
 
     var WIDTH = 400;
@@ -30,10 +34,10 @@ var TimeArea = React.createClass({
 
     return (
       <div>
+        <Tooltip tooltip={this.state.tooltip}></Tooltip>
         <svg width={WIDTH} height={HEIGHT}>
           <Timeline scale={scale} data={data} onTooltip={this.handleTooltip}></Timeline>
         </svg>
-        <Tooltip tooltip={this.state.tooltip}></Tooltip>
       </div>
     );
   }
@@ -41,6 +45,13 @@ var TimeArea = React.createClass({
 
 
 var Timeline = React.createClass({
+
+  handleMouseMove: function(e) {
+    this.props.onTooltip({
+      text: 'X: ' + e.clientX
+    });
+  },
+
   render: function() {
     var x = this.props.scale.x; // create scale
     var y = this.props.scale.y; // create scale
@@ -53,19 +64,21 @@ var Timeline = React.createClass({
     var path = line(this.props.data);
 
     return (
-      <g>
-        <path d={path} />
+      <g onMouseMove={this.handleMouseMove} >
+        {/* Rectangle for hit testing */}
+        <rect x="0" y="0"
+          width={this.props.scale.x.range()[1]}
+          height={this.props.scale.y.range()[0]}
+          fill="transparent" />
+        <path d={path}/>
       </g>
     );
-  }
+  },
+
 });
 
 var Tooltip = React.createClass({
   render: function() {
-    var scale; // create scale
-
-    var path = d3;
-
     return (
       <div>
         {this.props.tooltip.text}
