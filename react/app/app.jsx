@@ -14,11 +14,20 @@ var TimeArea = React.createClass({
   getInitialState: function () {
     return {
       tooltip: {text: 'Hello world'},
+      tooltipSrc: null,
     };
   },
 
-  handleTooltip: function (tooltipObj) {
-    this.setState({tooltip: tooltipObj});
+  handleTooltip: function (tooltipObj, tooltipSrc) {
+    if (!tooltipObj &&
+        tooltipSrc !== this.state.tooltipSrc) {
+      return;
+    }
+
+    this.setState({
+      tooltip: tooltipObj,
+      tooltipSrc: tooltipObj ? tooltipSrc : null,
+    });
   },
 
   render: function() {
@@ -32,7 +41,8 @@ var TimeArea = React.createClass({
     }; // create scale
     var data = [{x: 0, y: 0}, {x: 0.5, y: 0.5}];
     var annotations = [
-      {x: 0.1, l: 0.2, fill: 'green'}
+      {x: 0.1, l: 0.2, fill: 'green'},
+      {x: 0.8, l: 1, fill: 'blue'},
     ];
 
     return (
@@ -83,10 +93,14 @@ var Timeline = React.createClass({
 
 var Annotation = React.createClass({
 
-  handleMouseMove: function(e) {
+  handleMouseEnter: function(i) {
     this.props.onTooltip({
-      text: 'X: ' + e.clientX
-    });
+      text: 'Color: ' + this.props.data[i].fill,
+    }, this);
+  },
+
+  handleMouseLeave: function(i) {
+    this.props.onTooltip({}, this);
   },
 
   render: function() {
@@ -94,14 +108,19 @@ var Annotation = React.createClass({
     var y = this.props.scale.y; // create scale
 
     return (
-      <g onMouseMove={this.handleMouseMove} >
-        {this.props.data.map(function (d) {
+      <g>
+        {this.props.data.map(function (d, i) {
           return (
-            <rect x={x(d.x)}
+            <rect
+              key={i}
+              x={x(d.x)}
               width={x(d.x + d.l)}
               y="0"
               height={this.props.scale.y.range()[0]}
-              fill={d.fill} />
+              fill={d.fill}
+              onMouseEnter={this.handleMouseEnter.bind(this, i)}
+              onMouseLeave={this.handleMouseLeave.bind(this, i)}
+              />
           );
         }, this)}
       </g>
@@ -114,7 +133,7 @@ var Tooltip = React.createClass({
   render: function() {
     return (
       <div>
-        {this.props.tooltip.text}
+        {this.props.tooltip.text || 'Nothing'}
       </div>
     );
   }
